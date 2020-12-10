@@ -14,7 +14,7 @@ int main(int argc, char const *argv[]) {
         int i = 0;
         while(commands[i]){
             char ** args = parse_args(commands[i++]);
-            if(strcmp(args[0],"exit")==0) flag = 0;
+            if(!strcmp(args[0],"exit")) flag = 0; //still need to free memory
 
             int parent = getpid();
             int child = fork();
@@ -24,12 +24,11 @@ int main(int argc, char const *argv[]) {
             else wait(&status);
 
 
-            free(args);
-            args = NULL;
+            free(args);args = NULL;
         }
 
-        free(line);free(commands);
-        line = NULL; commands = NULL;
+        free(line);line = NULL;
+        free(commands);commands = NULL;
     }
     return 0;
 }
