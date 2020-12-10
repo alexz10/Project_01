@@ -7,5 +7,8 @@ main.o: main.c parser.h
 parser.o: parser.c parser.h
 	gcc -c parser.c
 
+.PHONY: run clean
 run: prgrm
 	./prgrm
+clean:
+	rm *.o
