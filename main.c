@@ -13,10 +13,8 @@ int main(int argc, char const *argv[]) {
         char ** commands = command_split(line);
         char ** cmdp = commands;
 
-        while(*cmdp){
-            ndone = run_cmd(*cmdp),cmdp++;
-
-            if(!ndone) break;
+        while(ndone && *cmdp){
+            ndone = run_cmd(*cmdp), cmdp++;
         }
 
         free(line);line = NULL;
