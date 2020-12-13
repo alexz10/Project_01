@@ -8,7 +8,7 @@
 int main(int argc, char const *argv[]) {
     char ndone = 1;
     while(ndone) {
-        printf("$:");
+        print_prompt();
         char * line = read_line();
         char ** commands = command_split(line);
         char ** cmdp = commands;
