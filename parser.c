@@ -21,6 +21,9 @@ char ** parse_args( char * command ){
     }
 
     args[i] = NULL;
+    char *tp = strrchr(args[i-1], '\n'); //removes trailing newline
+    if(tp) *tp = '\0';
+
     return args;
 }
 
@@ -28,18 +31,23 @@ char ** parse_args( char * command ){
 char * read_line(){
     char * arr = malloc(BUFFER);
     fgets(arr,BUFFER,stdin);
+
     return arr;
 }
 
 
-//Takes a line and splits it up into commands to be executed
+//Takes a line and splits it up into commands to be executed, the list is null terminated
 char ** command_split(char * line){
+    //note the possibole overflow here if the commands+1 are >= BUFFER
     char * s = line;
     char ** commands = malloc(BUFFER);
-    int i = 0;
+    char ** cmdp = commands;
 
-    while(s) commands[i++] = strsep(&s, ";\n");
+    while(s) {
+        *(cmdp++) = strsep(&s, ";");
+    }
 
-    commands[--i] = NULL; //get rid of the newline character
+    *cmdp = NULL; //make the list null terminating
+
     return commands;
 }

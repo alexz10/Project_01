@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-//returns 0 on sucess else -1, changes cwd
+//returns 0 on sucess else -1, changes cwd, a wrapper function for chdir
 int cmd_cd(char **args) {
     if(!args[1]) {
         printf("No such file or directory\n");
