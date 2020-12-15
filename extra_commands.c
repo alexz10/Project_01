@@ -2,15 +2,22 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 //returns 0 on sucess else -1, changes cwd, a wrapper function for chdir
 int cmd_cd(char **args) {
+    char *new_path;
     if(!args[1]) {
-        printf("No such file or directory\n");
-        return -1;
+        new_path = getenv("HOME");
+        if(!new_path) {
+            printf("No such file or directory\n");
+            return -1;
+        }
+    } else {
+        new_path = args[1];
     }
 
-    int w = chdir(args[1]);
+    int w = chdir(new_path);
     if(w == -1) {
         printf("%s\n",strerror(errno));
     }
