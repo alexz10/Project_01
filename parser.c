@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <ctype.h>
 
 #define BUFFER 1024
 
@@ -25,6 +26,22 @@ char ** parse_args( char * command ){
     if(tp) *tp = '\0';
 
     return args;
+}
+
+//returns NMULL if symb not found, else returns pointer to first non-whitespace character following the given symbol
+//UNTESTED
+char *parse_io_symbol(char *command, char symb) {
+    char *arrowp = strrchr(command, symb);
+    if(!arrowp) {
+        return NULL;
+    }
+
+    arrowp++; 
+    while(isspace(*arrowp)) {
+        arrowp++;
+    }
+
+    return arrowp;
 }
 
 //Reads one line from stdin and returns it
