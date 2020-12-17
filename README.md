@@ -1,5 +1,5 @@
 ## YES
-by Jeremy Ku-benjet, Lucas Lee, Alex Zhang
+by Jeremy Ku-benjet, Lucas Lee, Alex Zhang\
 TNPG: Team Yes
 
 ### Features:
