@@ -1,10 +1,15 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "extra_commands.h"
-#include "parser.h"
 #include <string.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include "extra_commands.h"
+#include "parser.h"
+
 #define MAX_PATH_LEN 4096
 //will just do this as a define here instead of like a settings file right now
 #define PROMPT_COLOR "\e[1;30m"
@@ -12,30 +17,76 @@
 
 //returns 1 on run and 0 if it encounters exit 
 int run_cmd(char *cmd) {
-    char **args = parse_args(cmd);
-    //special case functions
-    if(!strcmp(args[0], "exit")) {
-        free(args); args = NULL;
-        return 0;
-    }
 
-    if(!strcmp(args[0],"cd")) {
-        cmd_cd(args);
+    //check for special characters first
+    int symb_type = check_symbol (cmd);
+    
+    //if no special characters then default
+    if (symb_type == 0) {
+        char **args = parse_args(cmd);
+        //special case functions
+        if(!strcmp(args[0], "exit")) {
+            free(args); args = NULL;
+            return 0;
+        }
+
+        if(!strcmp(args[0],"cd")) {
+            cmd_cd(args);
+
+            free(args); args = NULL;
+            return 1;
+        }
+
+        //forking the parent
+        int cld = fork();
+        int status;
+
+        if(!cld) execvp(args[0], args);
+        else wait(&status);
 
         free(args); args = NULL;
         return 1;
     }
-    //messing with stdin/out for pipes and redirection
+    
+    //echo hi > out.txt; ls
+    //redirect output 
+    if (symb_type == 1) {
+    	//printf ("Redirecting output\n");
+    	char ** args = parse_symbol (cmd, ">");
+    	
+    	char ** call = parse_args (args[0]);
+    	char * filename = malloc (sizeof(char));
+    	filename = args[1];
+    	
+    	int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+	if (fd == -1) {
+		printf ("Error: %s\n", strerror(errno));
+		return 1;
+	}
+	
+	int backup_stdout = dup(STDOUT_FILENO);
+	dup2 (fd, STDOUT_FILENO);
+	execvp(call[0], call);
+	dup2 (backup_stdout, STDOUT_FILENO);
+	close (fd);
 
-    //forking the parent
-    int cld = fork();
-    int status;
-
-    if(!cld) execvp(args[0], args);
-    else wait(&status);
-
-    free(args); args = NULL;
-    return 1;
+    	//printf ("filename: %s\n", filename);
+    	//could possibly condense it into a function in extracommands
+    	
+    	return 1;
+    }
+    
+    //redirect input 
+    if (symb_type == 2) {
+    	//printf ("Redirecting input\n");
+    	return 1;
+    }
+    
+    //piping
+    if (symb_type == 3) {
+    	//printf ("Piping\n");
+    	return 1;
+    }
 }
 
 //prints the prompt

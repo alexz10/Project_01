@@ -9,8 +9,32 @@
 
 #define BUFFER 1024
 
+//Reads one line from stdin and returns it
+char * read_line() {
+    char * arr = malloc(BUFFER);
+    fgets(arr,BUFFER,stdin);
+
+    return arr;
+}
+
+//Takes a line and splits it up into commands to be executed, the list is null terminated
+char ** command_split(char * line) {
+    //note the possibole overflow here if the commands+1 are >= BUFFER
+    char * s = line;
+    char ** commands = malloc(BUFFER);
+    char ** cmdp = commands;
+
+    while(s) {
+        *(cmdp++) = strsep(&s, ";");
+    }
+
+    *cmdp = NULL; //make the list null terminating
+
+    return commands;
+}
+
 //Takes one command splits into an array of the command and its arguments
-char ** parse_args( char * command ){
+char ** parse_args( char * command ) {
     char * s = command;
     char ** args = malloc(BUFFER);
     int i = 0;
@@ -28,43 +52,32 @@ char ** parse_args( char * command ){
     return args;
 }
 
-//returns NMULL if symb not found, else returns pointer to first non-whitespace character following the given symbol
-//UNTESTED
-char *parse_io_symbol(char *command, char symb) {
-    char *arrowp = strrchr(command, symb);
-    if(!arrowp) {
-        return NULL;
-    }
+//Checks what symbol is present in the command
+int check_symbol (char * command) {
 
-    arrowp++; 
-    while(isspace(*arrowp)) {
-        arrowp++;
-    }
+	if (strchr(command, '>')) return 1;
+	if (strchr(command, '<')) return 2;
+	if (strchr(command, '|')) return 3; //For piping
 
-    return arrowp;
+	return 0;
 }
 
-//Reads one line from stdin and returns it
-char * read_line(){
-    char * arr = malloc(BUFFER);
-    fgets(arr,BUFFER,stdin);
+//Return a char ** for an array split on the symbol
+char ** parse_symbol (char * command, char * symbol) {
 
-    return arr;
-}
+    char * s = command;
+    char ** args = malloc(BUFFER);
+    int i = 0;
 
-
-//Takes a line and splits it up into commands to be executed, the list is null terminated
-char ** command_split(char * line){
-    //note the possibole overflow here if the commands+1 are >= BUFFER
-    char * s = line;
-    char ** commands = malloc(BUFFER);
-    char ** cmdp = commands;
-
+    while(*s == ' ') s++; //get rid of leading spaces
     while(s) {
-        *(cmdp++) = strsep(&s, ";");
+        char * t = strsep(&s, symbol);
+        if (*t) args[i++] = t; //in case of extra spaces in the command
     }
 
-    *cmdp = NULL; //make the list null terminating
+    args[i] = NULL;
+    char *tp = strrchr(args[i-1], '\n'); //removes trailing newline
+    if(tp) *tp = '\0';
 
-    return commands;
+    return args;
 }
