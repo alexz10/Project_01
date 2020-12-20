@@ -49,14 +49,17 @@ int run_cmd(char *cmd) {
     }
     
     //echo hi > out.txt; ls
+    
     //redirect output 
     if (symb_type == 1) {
-    	//printf ("Redirecting output\n");
+
     	char ** args = parse_symbol (cmd, ">");
     	
     	char ** call = parse_args (args[0]);
     	char * filename = malloc (sizeof(char));
     	filename = args[1];
+	while(*filename == ' ') filename++;
+	trim_trailing(filename);
     	
     	int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0644);
 	if (fd == -1) {
@@ -66,20 +69,53 @@ int run_cmd(char *cmd) {
 	
 	int backup_stdout = dup(STDOUT_FILENO);
 	dup2 (fd, STDOUT_FILENO);
-	execvp(call[0], call);
+	
+	int cld = fork();
+        int status;
+
+        if(!cld) execvp(call[0], call);
+        else wait(&status);
+
+        free(args); args = NULL;
+	
 	dup2 (backup_stdout, STDOUT_FILENO);
 	close (fd);
-
-    	//printf ("filename: %s\n", filename);
-    	//could possibly condense it into a function in extracommands
-    	
-    	return 1;
+	
+	return 1;
     }
     
     //redirect input 
     if (symb_type == 2) {
-    	//printf ("Redirecting input\n");
-    	return 1;
+    	
+    	char ** args = parse_symbol (cmd, "<");
+    	
+    	char ** call = parse_args (args[0]);
+    	char * filename = malloc (sizeof(char));
+    	filename = args[1];
+	while(*filename == ' ') filename++;
+	trim_trailing(filename);
+    	
+    	int fd = open(filename, O_RDONLY);
+	if (fd == -1) {
+		printf ("Error: %s\n", strerror(errno));
+		return 1;
+	}
+	
+	int backup_stdin = dup(STDIN_FILENO);
+	dup2 (fd, STDIN_FILENO);
+	
+	int cld = fork();
+        int status;
+
+        if(!cld) execvp(call[0], call);
+        else wait(&status);
+
+        free(args); args = NULL;
+	
+	dup2 (backup_stdin, STDIN_FILENO);
+	close (fd);
+	
+	return 1;
     }
     
     //piping

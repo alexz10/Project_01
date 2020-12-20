@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/wait.h>
+#include "parser.h"
 
 //returns 0 on sucess else -1, changes cwd, a wrapper function for chdir
 int cmd_cd(char **args) {
@@ -27,9 +29,8 @@ int cmd_cd(char **args) {
     return w;
 }
 
-void cmd_redirect_output (char * filename) {
+void cmd_redirect_output (char * cmd) {
 
-	
 }
 
 void cmd_redirect_input (char * filename) {

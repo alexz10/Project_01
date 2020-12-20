@@ -81,3 +81,24 @@ char ** parse_symbol (char * command, char * symbol) {
 
     return args;
 }
+
+//Trims the trailing white spaces
+void trim_trailing(char * str) {
+
+    int index, i;
+    
+    index = -1;
+
+    i = 0;
+    while(str[i])
+    {
+        if(str[i] != ' ' && str[i] != '\t' && str[i] != '\n')
+        {
+            index= i;
+        }
+
+        i++;
+    }
+
+    str[index + 1] = '\0';
+}
