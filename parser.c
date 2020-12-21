@@ -57,7 +57,7 @@ int check_symbol (char * command) {
     char * c, * d;
     int out = 0;
 	if ((c = strchr(command, '>'))) {
-        if((d = strchr(c, '>')) && c == d)out = 4;
+        if((d = strchr(c+1, '>')) && d == c + sizeof(char))out = 4;
         else out = 1;
     }
 	else if (strchr(command, '<')) out = 2;

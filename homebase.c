@@ -25,6 +25,7 @@ int run_cmd(char *cmd) {
     if (symb_type == 0) {
         char **args = parse_args(cmd);
         //special case functions
+
         if(!strcmp(args[0], "exit")) {
             free(args); args = NULL;
             return 0;
@@ -45,7 +46,7 @@ int run_cmd(char *cmd) {
         else wait(&status);
 
         if(check == -1){
-            printf ("Error: %s\n", strerror(errno));
+            printf ("Error: command not found\n");
             return -1;
         }
 
@@ -78,17 +79,18 @@ int run_cmd(char *cmd) {
         int cld = fork();
         int status, check = 0;
 
-        if(!cld) check = execvp(args[0], args);
+        if(!cld) check = execvp(call[0], call);
         else wait(&status);
 
-        if(check == -1){
-            printf ("Error: %s\n", strerror(errno));
-            return -1;
-        }
 
         free(args); args = NULL;
         dup2 (backup_stdout, STDOUT_FILENO);
         close (fd);
+
+        if(check == -1){
+            printf ("Error: command not found\n");
+            return -1;
+        }
 
         return 1;
     }
@@ -118,18 +120,18 @@ int run_cmd(char *cmd) {
         int cld = fork();
         int status, check = 0;
 
-        if(!cld) check = execvp(args[0], args);
+        if(!cld) check = execvp(call[0], call);
         else wait(&status);
-
-        if(check == -1){
-            printf ("Error: %s\n", strerror(errno));
-            return -1;
-        }
 
         free(args); args = NULL;
 
         dup2 (backup_stdin, STDIN_FILENO);
         close (fd);
+
+        if(check == -1){
+            printf ("Error: command not found\n");
+            return -1;
+        }
 
         return 1;
     }
@@ -162,17 +164,17 @@ int run_cmd(char *cmd) {
         int cld = fork();
         int status, check = 0;
 
-        if(!cld) check = execvp(args[0], args);
+        if(!cld) check = execvp(call[0], call);
         else wait(&status);
-
-        if(check == -1){
-            printf ("Error: %s\n", strerror(errno));
-            return -1;
-        }
 
         free(args); args = NULL;
         dup2 (backup_stdout, STDOUT_FILENO);
         close (fd);
+
+        if(check == -1){
+            printf ("Error: command not found\n");
+            return -1;
+        }
 
         return 1;
 
