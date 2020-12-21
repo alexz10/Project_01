@@ -18,14 +18,14 @@ char * read_line() {
 }
 
 //Takes a line and splits it up into commands to be executed, the list is null terminated
-char ** command_split(char * line) {
+char ** command_split(char * line, char *delim) {
     //note the possibole overflow here if the commands+1 are >= BUFFER
     char * s = line;
     char ** commands = malloc(BUFFER);
     char ** cmdp = commands;
 
     while(s) {
-        *(cmdp++) = strsep(&s, ";");
+        *(cmdp++) = strsep(&s, delim);
     }
 
     *cmdp = NULL; //make the list null terminating

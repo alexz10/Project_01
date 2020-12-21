@@ -10,7 +10,7 @@ int main(int argc, char const *argv[]) {
     while(ndone) {
         print_prompt();
         char * line = read_line();
-        char ** commands = command_split(line);
+        char ** commands = command_split(line,";");
         char ** cmdp = commands;
 
         while(ndone && *cmdp) ndone = run_cmd(*cmdp), cmdp++;
