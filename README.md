@@ -7,10 +7,11 @@ TNPG: Team Yes
 + Reads commands found in the PATH and in the current directory with arguments
 + Chain multiple commands on one line with ;
 + Supports stdout (> and >>) stdin (<) redirection with one command and one file on command
++ Piping between two commands
 
 
 ## Attempted:
-+ Piping between programs
++ Chained piping
 
 
 ## Bugs:
@@ -34,7 +35,7 @@ Continuously runs the command prompt and calls helper functions until exit reach
 /*======== int run_cmd() ==========
 Inputs: char *cmd
 Returns: 1 on successful execution, 0 on exit, -1 on failed execution
-Takes a single command, scans for special redirection or piping symbols and 
+Takes a single command, scans for special redirection or piping symbols and
 delegates it to helper functions accordingly
 ====================*/
 
@@ -99,9 +100,9 @@ Splits the command into an array of the executable and the arguments
 + int check_symbol (char * command);
 Inputs: char * command
 Returns: 1 if > is found
-         2 if < is found 
-         3 if | is found, 
-         4 if >> is found 
+         2 if < is found
+         3 if | is found,
+         4 if >> is found
          0 if none are found
 Detects special redirection and piping symbols
 ====================*/
@@ -121,7 +122,7 @@ arguments and the filename to be redirected
 
 Inputs: char * command
 Returns: A pointer to the start of the file to redirect from or to
-Searches the command for >> specified and returns the pointer to the filename that corresponds 
+Searches the command for >> specified and returns the pointer to the filename that corresponds
 to the one needed for redirection
 ====================*/
 
