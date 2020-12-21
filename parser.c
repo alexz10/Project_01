@@ -22,13 +22,15 @@ char ** command_split(char * line, char *delim) {
     //note the possibole overflow here if the commands+1 are >= BUFFER
     char * s = line;
     char ** commands = malloc(BUFFER);
-    char ** cmdp = commands;
+    int i = 0;
 
+    while(*s == ';') s++;
     while(s) {
-        *(cmdp++) = strsep(&s, delim);
+        char * t = strsep(&s, delim);
+        if(*t) commands[i++] = t;
     }
 
-    *cmdp = NULL; //make the list null terminating
+    commands[i] = NULL; //make the list null terminating
 
     return commands;
 }
