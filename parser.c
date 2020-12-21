@@ -54,12 +54,16 @@ char ** parse_args( char * command ) {
 
 //Checks what symbol is present in the command
 int check_symbol (char * command) {
+    char * c, * d;
+    int out = 0;
+	if ((c = strchr(command, '>'))) {
+        if((d = strchr(c, '>')) && c == d)out = 4;
+        else out = 1;
+    }
+	else if (strchr(command, '<')) out = 2;
+	else if (strchr(command, '|')) out = 3; //For piping
 
-	if (strchr(command, '>')) return 1;
-	if (strchr(command, '<')) return 2;
-	if (strchr(command, '|')) return 3; //For piping
-
-	return 0;
+	return out;
 }
 
 //Return a char ** for an array split on the symbol
@@ -67,26 +71,43 @@ char ** parse_symbol (char * command, char * symbol) {
 
     char * s = command;
     char ** args = malloc(BUFFER);
-    int i = 0;
 
     while(*s == ' ') s++; //get rid of leading spaces
-    while(s) {
-        char * t = strsep(&s, symbol);
-        if (*t) args[i++] = t; //in case of extra spaces in the command
-    }
+    args[0] = strsep(&s, symbol);
+    args[1] = s;
+    args[2] = NULL;
 
-    args[i] = NULL;
-    char *tp = strrchr(args[i-1], '\n'); //removes trailing newline
+    char *tp = strrchr(args[1], '\n'); //removes trailing newline
     if(tp) *tp = '\0';
 
     return args;
 }
 
+char ** parse_append(char * command){
+
+    char * s = command;
+    char ** args = malloc(BUFFER);
+
+    args[0] = strsep(&s, ">");
+    strsep(&s, ">");
+
+    args[1] = s;
+    args[2] = NULL;
+
+    char *tp = strrchr(args[1], '\n'); //removes trailing newline
+    if(tp) *tp = '\0';
+
+    return args;
+
+
+}
+
+
 //Trims the trailing white spaces
 void trim_trailing(char * str) {
 
     int index, i;
-    
+
     index = -1;
 
     i = 0;

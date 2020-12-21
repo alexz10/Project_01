@@ -6,6 +6,7 @@ char ** command_split(char * line);
 char ** parse_args(char * command);
 int check_symbol (char * command);
 char ** parse_symbol (char * command, char * symbol);
+char ** parse_append(char * command);
 void trim_trailing(char * str);
 
 #endif

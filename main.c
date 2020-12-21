@@ -13,9 +13,7 @@ int main(int argc, char const *argv[]) {
         char ** commands = command_split(line);
         char ** cmdp = commands;
 
-        while(ndone && *cmdp){
-            ndone = run_cmd(*cmdp), cmdp++;
-        }
+        while(ndone && *cmdp) ndone = run_cmd(*cmdp), cmdp++;
 
         free(line);line = NULL;
         free(commands);commands = NULL;
