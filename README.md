@@ -1,21 +1,23 @@
-## YES
-by Jeremy Ku-benjet, Lucas Lee, Alex Zhang\
+## Shells Have Hexagons On Them
+by (a currently very tired) Jeremy Ku-benjet, Lucas Lee, Alex Zhang\
 TNPG: Team Yes
 
 ## Features:
 
-+ Reads commands found in the PATH and in the current directory with arguments
-+ Chain multiple commands on one line with ;
-+ Supports stdout (> and >>) stdin (<) redirection with one command and one file on command
-+ Piping between two commands
+- Reads commands found in the PATH and in the current directory with arguments
+- Chain multiple commands on one line with ;
+- Supports stdout (> and >>) stdin (<) redirection with one command and one file on command
+- Piping between two commands
 
 
 ## Attempted:
-+ Chained piping
+- Chained piping
+- Double redirection
+- Sorcery
 
 
 ## Bugs:
-
+- occasionally a character is not read by the parser, we don't know why
 
 ## Files & Function Headers:
 
@@ -56,22 +58,25 @@ Overrrides the original file descriptor with the inputted file descriptor
 Input: char *cmd
        char append
 Returns: 1 on success, -1 if the command fails or the file cannot be written to
-
-[Description needed]
+runs the functions specified by the string cmd and outputs it to a file specified by a redirection character (> or >>). If append is true it will append to the file instead of truncate it
 ====================*/
 
 /*======== int redirected_in_cmd() ==========
 Input: char *cmd
 Returns: 1 on success, -1 if the command fails or the file cannot be read from
-
-[Description needed]
+this will read execute the command specified by the string cmd, taking input from a file specified by a redirection character (<)
 ====================*/
 
 /*======== int norm_cmd() ==========
-+ int norm_cmd(char *cmd);
 Input: char *cmd
 Returns: Returns 1 on successful execution and 0 on exit
 Handles the execution of commands with no pipes or redirections
+====================*/
+
+/*======== int exec_piped_commands() ==========
+Input: char *cmd
+Returns: 1 on successful execution
+This will handle a cmd containing a single pipe and run the corrosponding commands with their corrosponding inputs
 ====================*/
 ```
 
@@ -108,8 +113,6 @@ Detects special redirection and piping symbols
 ====================*/
 
 /*======== char ** parse_symbol() ==========
-[Check if accurate]
-
 Inputs: char * command
         char * symbol
 Returns: An array containing the executable with its arguments and the filename to be redirected
@@ -118,8 +121,6 @@ arguments and the filename to be redirected
 ====================*/
 
 /*======== char ** parse_append() ==========
-[Check if accurate]
-
 Inputs: char * command
 Returns: A pointer to the start of the file to redirect from or to
 Searches the command for >> specified and returns the pointer to the filename that corresponds
