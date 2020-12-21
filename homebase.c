@@ -42,16 +42,21 @@ int run_cmd(char *cmd) {
         int cld = fork();
         int status, check = 0;
 
-        if(!cld) check = execvp(args[0], args);
-        else wait(&status);
-
-        if(check == -1){
-            printf ("Error: command not found\n");
-            return -1;
+        if(!cld) {
+            check = execvp(args[0], args);
+            exit(check);
         }
+        else {
+            wait(&status);
 
-        free(args); args = NULL;
-        return 1;
+            if(check == -1){
+                printf ("Error: command not found\n");
+                return -1;
+            }
+
+            free(args); args = NULL;
+            return 1;
+        }
     }
 
     //echo hi > out.txt; ls
@@ -79,20 +84,23 @@ int run_cmd(char *cmd) {
         int cld = fork();
         int status, check = 0;
 
-        if(!cld) check = execvp(call[0], call);
-        else wait(&status);
+        if(!cld) {
+            check = execvp(call[0], call);
+            exit(check);
+        } else {
+            wait(&status);
 
+            free(args); args = NULL;
+            dup2 (backup_stdout, STDOUT_FILENO);
+            close (fd);
 
-        free(args); args = NULL;
-        dup2 (backup_stdout, STDOUT_FILENO);
-        close (fd);
+            if(check == -1){
+                printf ("Error: command not found\n");
+                return -1;
+            }
 
-        if(check == -1){
-            printf ("Error: command not found\n");
-            return -1;
+            return 1;
         }
-
-        return 1;
     }
 
     //redirect input
@@ -120,20 +128,24 @@ int run_cmd(char *cmd) {
         int cld = fork();
         int status, check = 0;
 
-        if(!cld) check = execvp(call[0], call);
-        else wait(&status);
+        if(!cld) {
+            check = execvp(call[0], call);
+            exit(check);
+        } else {
+            wait(&status);
 
-        free(args); args = NULL;
+            free(args); args = NULL;
 
-        dup2 (backup_stdin, STDIN_FILENO);
-        close (fd);
+            dup2 (backup_stdin, STDIN_FILENO);
+            close (fd);
 
-        if(check == -1){
-            printf ("Error: command not found\n");
-            return -1;
+            if(check == -1){
+                printf ("Error: command not found\n");
+                return -1;
+            }
+
+            return 1;
         }
-
-        return 1;
     }
 
     //piping
@@ -164,20 +176,24 @@ int run_cmd(char *cmd) {
         int cld = fork();
         int status, check = 0;
 
-        if(!cld) check = execvp(call[0], call);
-        else wait(&status);
-
-        free(args); args = NULL;
-        dup2 (backup_stdout, STDOUT_FILENO);
-        close (fd);
-
-        if(check == -1){
-            printf ("Error: command not found\n");
-            return -1;
+        if(!cld) { 
+            check = execvp(call[0], call);
+            exit(check);
         }
+        else {
+            wait(&status);
 
-        return 1;
+            free(args); args = NULL;
+            dup2 (backup_stdout, STDOUT_FILENO);
+            close (fd);
 
+            if(check == -1){
+                printf ("Error: command not found\n");
+                return -1;
+            }
+
+            return 1;
+        }
     }
 
     else return -1;
