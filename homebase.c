@@ -15,137 +15,31 @@
 #define PROMPT_COLOR "\e[1;30m"
 #define RESET "\e[0m"
 
+int norm_cmd(char *cmd);
+int redirected_out_cmd(char *cmd, char append);
+int redirected_in_cmd(char *cmd);
+
 //returns 1 on run and 0 if it encounters exit
 int run_cmd(char *cmd) {
 
     //check for special characters first
     int symb_type = check_symbol (cmd);
 
-    //if no special characters then default
+    //if no special characters then default stdin/stdout
     if (symb_type == 0) {
-        char **args = parse_args(cmd);
-        //special case functions
-
-        if(!strcmp(args[0], "exit")) {
-            free(args); args = NULL;
-            return 0;
-        }
-
-        if(!strcmp(args[0],"cd")) {
-            cmd_cd(args);
-
-            free(args); args = NULL;
-            return 1;
-        }
-
-        //forking the parent
-        int cld = fork();
-        int status, check = 0;
-
-        if(!cld) {
-            check = execvp(args[0], args);
-            exit(check);
-        }
-        else {
-            wait(&status);
-
-            if(check == -1){
-                printf ("Error: command not found\n");
-                return -1;
-            }
-
-            free(args); args = NULL;
-            return 1;
-        }
+        return norm_cmd(cmd);
     }
 
     //echo hi > out.txt; ls
 
     //redirect output
     else if (symb_type == 1) {
-
-    	char ** args = parse_symbol (cmd, ">");
-
-    	char ** call = parse_args (args[0]);
-    	char * filename = malloc (MAX_PATH_LEN);
-    	filename = args[1];
-        while(*filename == ' ') filename++;
-        trim_trailing(filename);
-
-    	int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0644);
-        if (fd == -1) {
-            printf ("Error: %s\n", strerror(errno));
-            return 1;
-        }
-
-        int backup_stdout = dup(STDOUT_FILENO);
-        dup2 (fd, STDOUT_FILENO);
-
-        int cld = fork();
-        int status, check = 0;
-
-        if(!cld) {
-            check = execvp(call[0], call);
-            exit(check);
-        } else {
-            wait(&status);
-
-            free(args); args = NULL;
-            dup2 (backup_stdout, STDOUT_FILENO);
-            close (fd);
-
-            if(check == -1){
-                printf ("Error: command not found\n");
-                return -1;
-            }
-
-            return 1;
-        }
+        redirected_out_cmd(cmd,0);
     }
 
     //redirect input
     else if (symb_type == 2) {
-
-    	char ** args = parse_symbol (cmd, "<");
-
-    	char ** call = parse_args (args[0]);
-    	char * filename = malloc (MAX_PATH_LEN);
-    	filename = args[1];
-
-        while(*filename == ' ') filename++;
-        trim_trailing(filename);
-
-    	int fd = open(filename, O_RDONLY);
-
-        if (fd == -1) {
-            printf ("Error: %s\n", strerror(errno));
-            return 1;
-        }
-
-        int backup_stdin = dup(STDIN_FILENO);
-        dup2 (fd, STDIN_FILENO);
-
-        int cld = fork();
-        int status, check = 0;
-
-        if(!cld) {
-            check = execvp(call[0], call);
-            exit(check);
-        } else {
-            wait(&status);
-
-            free(args); args = NULL;
-
-            dup2 (backup_stdin, STDIN_FILENO);
-            close (fd);
-
-            if(check == -1){
-                printf ("Error: command not found\n");
-                return -1;
-            }
-
-            return 1;
-        }
+        redirected_in_cmd(cmd);
     }
 
     //piping
@@ -153,47 +47,9 @@ int run_cmd(char *cmd) {
     	//printf ("Piping\n");
     	return 1;
     }
-
+    //appending redirected output ">>"
     else if(symb_type == 4){
-        char ** args = parse_append (cmd);
-
-    	char ** call = parse_args (args[0]);
-    	char * filename = malloc (MAX_PATH_LEN);
-    	filename = args[1];
-
-        while(*filename == ' ') filename++;
-        trim_trailing(filename);
-
-        int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644);
-        if (fd == -1) {
-            printf ("Error: %s\n", strerror(errno));
-            return 1;
-        }
-
-        int backup_stdout = dup(STDOUT_FILENO);
-        dup2 (fd, STDOUT_FILENO);
-
-        int cld = fork();
-        int status, check = 0;
-
-        if(!cld) { 
-            check = execvp(call[0], call);
-            exit(check);
-        }
-        else {
-            wait(&status);
-
-            free(args); args = NULL;
-            dup2 (backup_stdout, STDOUT_FILENO);
-            close (fd);
-
-            if(check == -1){
-                printf ("Error: command not found\n");
-                return -1;
-            }
-
-            return 1;
-        }
+        redirected_out_cmd(cmd,1);
     }
 
     else return -1;
@@ -225,4 +81,146 @@ void print_prompt() {
         printf(PROMPT_COLOR "%s" RESET "$: ", buf);
     }
     return;
+}
+//A normal function, returns 1 on sucessful run and 0 on exit
+int norm_cmd(char *cmd) {
+    char **args = parse_args(cmd);
+    //special case functions
+
+    if(!strcmp(args[0], "exit")) {
+        free(args); args = NULL;
+        return 0;
+    }
+
+    if(!strcmp(args[0],"cd")) {
+        cmd_cd(args);
+
+        free(args); args = NULL;
+        return 1;
+    }
+
+    //forking the parent
+    int cld = fork();
+    int status, check = 0;
+
+    if(!cld) {
+        //child run command
+        check = execvp(args[0], args);
+        exit(check);
+    }
+    else {
+        wait(&status);
+
+        if(check == -1){
+            printf ("Error: command not found\n");
+            return -1;
+        }
+
+        free(args); args = NULL;
+        return 1;
+    }
+}
+
+//returns a dupped original file descriptor so it isn't lost
+int redirect_file_descriptor(int orignial_fd, int new_fd) {
+    int backup_fd = dup(orignial_fd);
+    dup2 (new_fd, orignial_fd);
+    return backup_fd;
+}
+
+//honestly I don't know what this returns
+int redirected_out_cmd(char *cmd, char append) {
+    char **args;
+    if(append) {
+        args = parse_append (cmd);
+    } else {
+        args = parse_symbol (cmd, ">");
+    }
+
+    char ** call = parse_args (args[0]);
+    char * filename = malloc (MAX_PATH_LEN);
+    filename = args[1];
+    while(*filename == ' ') filename++;
+    trim_trailing(filename);
+
+    //open file descriptor and redirect stdin
+    int fd;
+    if(append) {
+        fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644);
+    } else {
+        fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    }
+    if (fd == -1) {
+        printf ("Error: %s\n", strerror(errno));
+        return 1;
+    }
+
+    int backup_stdout = redirect_file_descriptor(STDOUT_FILENO, fd);
+
+    //forking parent and child
+    int cld = fork();
+    int status, check = 0;
+
+    if(!cld) {
+        check = execvp(call[0], call);
+        exit(check);
+    } else {
+        wait(&status);
+        //resets stdout to normal
+        free(args); args = NULL;
+        dup2 (backup_stdout, STDOUT_FILENO);
+        close (fd);
+
+        if(check == -1){
+            printf ("Error: command not found\n");
+            return -1;
+        }
+
+        return 1;
+    }
+}
+
+//please write something nicer next time Alex, I can't figure out what you want this to return on error and on success. Maybe I am just too tired to think right now.
+int redirected_in_cmd(char *cmd) {
+    //more parsing nonsense
+    char ** args = parse_symbol (cmd, "<");
+
+    char ** call = parse_args (args[0]);
+    char * filename = malloc (MAX_PATH_LEN);
+    filename = args[1];
+
+    while(*filename == ' ') filename++;
+    trim_trailing(filename);
+
+    //open file descriptor for input file
+    int fd = open(filename, O_RDONLY);
+
+    if (fd == -1) {
+        printf ("Error: %s\n", strerror(errno));
+        return 1;
+    }
+
+    int backup_stdin = redirect_file_descriptor(STDIN_FILENO, fd);
+
+    int cld = fork();
+    int status, check = 0;
+
+    if(!cld) {
+        check = execvp(call[0], call);
+        exit(check);
+    } else {
+        wait(&status);
+
+        free(args); args = NULL;
+
+        dup2 (backup_stdin, STDIN_FILENO);
+        close (fd);
+
+        if(check == -1){
+            printf ("Error: command not found\n");
+            return -1;
+        }
+
+        return 1;
+    }
 }
