@@ -12,8 +12,8 @@
 #include "parser.h"
 
 #define MAX_PATH_LEN 4096
-#define READ 1
-#define WRITE 0
+#define READ 0
+#define WRITE 1
 //will just do this as a define here instead of like a settings file right now
 #define PROMPT_COLOR "\e[1;30m"
 #define RESET "\e[0m"
@@ -238,60 +238,53 @@ int exec_piped_commands(char *cmd) {
     int pipe_end[2];
     pipe(pipe_end);
 
-    //int backup_stdout = redirect_file_descriptor(STDOUT_FILENO,pipe_end[READ]);
-    int backup_stdout = dup(STDOUT_FILENO);
-    dup2 (STDOUT_FILENO, pipe_end[READ]);
 
+    int backup_stdout = redirect_file_descriptor(STDOUT_FILENO, pipe_end[WRITE]);
     //run inital command to start cycle
     //get call
     char **call = parse_args(*cmd_part);
-    int not_child = fork();
+    int chld = fork();
     int status, check = 0;
-    if(!not_child) {
+    if(!chld) {
         check = execvp(call[0],call);
         exit(check);
-    } 
+    }
+    else{
 
-    wait(&status);
-    //sets up input output loop
-    //int backup_stdin = redirect_file_descriptor(STDIN_FILENO, pipe_end[WRITE]);
-    int backup_stdin = dup(STDIN_FILENO);
-    dup2 (STDIN_FILENO, pipe_end[WRITE]);
-
-
-    //increment cmd_part so it is as it should be
-    cmd_part++;
-    while(*cmd_part) {
-    printf("here2\n");
-        //case of last cmd_part
-        if(!(*(cmd_part+1))) {
-            dup2(backup_stdout,STDOUT_FILENO);
-        }
-
-        //remove leading whitespace
-        while(isspace((*cmd_part)[0])) {
-            (*cmd_part)++;
-        }
-
-        //call exec and fork child
-        call = parse_args(*cmd_part);
-        not_child = fork();
-        status, check = 0;
-        if(!not_child) {
-            check = execvp(call[0],call);
-            exit(check);
-        }
         wait(&status);
 
+        pipe_end[WRITE] = close(pipe_end[WRITE]);
+        dup2 (backup_stdout, STDOUT_FILENO);
 
-        printf("%s\n",*cmd_part);
+
+        //increment cmd_part so it is as it should be
         cmd_part++;
-    }
-    //free and reset stuff to normal
-    dup2(backup_stdin,STDIN_FILENO);
-    pipe_end[WRITE] = close(pipe_end[WRITE]);
-    pipe_end[READ] = close(pipe_end[READ]);
-    free(cmd_list); cmd_list = NULL;
+        int backup_stdin = redirect_file_descriptor(STDIN_FILENO, pipe_end[READ]);
 
-    return 1;
+
+        //call exec and fork child
+        char**  call2 = parse_args(*cmd_part);
+        int chld2 = fork();
+        int status2, check2 = 0;
+
+        if(!chld2) {
+            //printf("%s\n", call2[0]);
+            check2 = execvp(call2[0],call2);
+            exit(check2);
+        }
+        else{
+            wait(&status2);
+
+            pipe_end[READ] = close(pipe_end[READ]);
+            dup2 (backup_stdin, STDIN_FILENO);
+
+
+
+            free(cmd_list); cmd_list = NULL;
+
+            return 1;
+        }
+
+    }
+
 }
