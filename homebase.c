@@ -34,12 +34,12 @@ int run_cmd(char *cmd) {
 
     //redirect output
     else if (symb_type == 1) {
-        redirected_out_cmd(cmd,0);
+        return redirected_out_cmd(cmd,0);
     }
 
     //redirect input
     else if (symb_type == 2) {
-        redirected_in_cmd(cmd);
+        return redirected_in_cmd(cmd);
     }
 
     //piping
@@ -49,7 +49,7 @@ int run_cmd(char *cmd) {
     }
     //appending redirected output ">>"
     else if(symb_type == 4){
-        redirected_out_cmd(cmd,1);
+        return redirected_out_cmd(cmd,1);
     }
 
     else return -1;
