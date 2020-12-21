@@ -42,6 +42,7 @@ char ** parse_args( char * command ) {
     int i = 0;
 
     while(*s == ' ') s++; //get rid of leading spaces
+    if(*s == '\0') return args;
     while(s) {
         char * t = strsep(&s, " ");
         if (*t) args[i++] = t; //in case of extra spaces in the command
