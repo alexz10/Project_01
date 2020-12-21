@@ -31,13 +31,35 @@ Continuously runs the command prompt and calls helper functions until exit reach
 ```
 Inputs: A single command to run with no semicolons
 Output: 1 on successful execution, 0 on exit, -1 on failed execution
-Takes a single command, scans for special redirection or piping symbols and executes accordingly
+Takes a single command, scans for special redirection or piping symbols and delegates it to helper functions accordingly
 ```
 + void print_prompt();
 ```
 Inputs: None
 Outputs: None
 Prints out the prompt for the shell including the working directory
+```
++ redirect_file_descriptor(int orignial_fd, int new_fd);
+```
+Inputs: The original file descriptor to override, and the new file descriptor to the file that should override it
+Output: The placeholder file descriptor for the one that was overridden
+```
++ int redirected_out_cmd(char *cmd, char append);
+```
+Input: A command with a stdout redirection and a char serving as a boolean on whether or not to appened or overwrite the file
+Output: 1 on success, -1 if the command fails or the file cannot be written to
+```
++ redirected_in_cmd(char *cmd);
+```
+Input: A command with a stdin redirection
+Output: 1 on success, -1 if the command fails or the file cannot be read from
+
+```
++ int norm_cmd(char *cmd);
+```
+Input: A command with no pipes or redirections
+Output: Returns 1 on successful execution and 0 on exit
+Handles the execution of commands with no pipes or redirections
 ```
 
 #### parser.c
